@@ -23,7 +23,7 @@ class TSPGuiApp:
         # ----------------------------------------
         # --- CHIA BỐ CỤC CHÍNH (Dùng .pack()) ---
         # Frame bên trái: Chứa các nút bấm và ô nhập liệu
-        self.control_frame = ttk.Frame(self.root, width=300, padding=10)
+        self.control_frame = ttk.Frame(self.root, width=320, padding=10)
         self.control_frame.pack(side=tk.LEFT, fill=tk.Y)
 
         # Frame bên phải: Chứa bản đồ và kết quả
@@ -91,8 +91,21 @@ class TSPGuiApp:
 
     def run_hill_climbing(self):
         """Hàm kích hoạt khi bấm nút chạy Hill Climbing"""
+        # 1. Lấy chuỗi người dùng nhập vào và xóa khoảng trắng thừa
+        cities_input = self.entry_cities.get().strip()
+        # 2. Bắt lỗi nhập chữ hoặc để trống
+        if not cities_input.isdigit():
+            messagebox.showerror("Lỗi Nhập Liệu",
+                                 "Số lượng thành phố không được để trống!")
+            return  # Dừng hàm lại ngay lập tức, không chạy thuật toán bên dưới
+
+        num_cities = int(cities_input)
+        # 3. Bắt lỗi số lượng quá nhỏ (Ví dụ: dưới 3 thành phố)
+        if num_cities < 3:
+            messagebox.showwarning("Cảnh Báo",
+                                   "Vui lòng nhập số lượng thành phố hợp lệ (>= 3)!")
+            return  # Dừng hàm
         try:
-            num_cities = int(self.entry_cities.get())
             seed_val = self.entry_seed.get()
             seed = int(seed_val) if seed_val != "" else None
 
