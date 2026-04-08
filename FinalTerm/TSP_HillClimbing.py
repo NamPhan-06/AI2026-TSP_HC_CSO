@@ -299,6 +299,7 @@ class HillClimbing:
         self.space_measured_kb = round(space_bytes / 1024.0, 6)
 
         self.result = ""
+        self.result += "=============== KẾT QUẢ HC ===============\n"
         self.result += "Ma trận khoảng cách:\n"
         for row in self.matrix:
             self.result += str(row) + "\n"
@@ -315,19 +316,3 @@ class HillClimbing:
 
         return self.best_route, self.best_distance
 
-
-# MAIN
-
-if __name__ == "__main__":
-    num_cities = 5
-
-    hc = HillClimbing(num_cities, seed=42)
-    best_route, best_distance = hc.solve()
-
-    print(hc.result)
-    hc.create_plot()
-
-    print("\n--- TEST CASES ---")
-    print_case_report(run_best_case())
-    print_case_report(run_base_case())
-    print_case_report(run_worst_case())
