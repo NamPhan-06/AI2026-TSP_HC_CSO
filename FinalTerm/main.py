@@ -34,31 +34,13 @@ def main():
         num_cities, seed = app.get_inputs()
         if num_cities is None: return
         try:
-            # Tạo ma trận và chạy thuật toán
             matrix = create_distance_matrix(num_cities, seed=seed)
-            start = time.perf_counter()
-            best_route, best_distance, _, complexity = hybrid_algorithm_advanced(matrix, N=30, max_iter=100,
-                                                                                 hc_rate=0.3)
-            time_ms = round((time.perf_counter() - start) * 1000.0, 2)
+            # Hứng 5 biến, bỏ đi các đoạn tính thời gian và format text thủ công
+            best_route, best_distance, _, _, result_str = hybrid_algorithm_advanced(matrix, N=30, max_iter=100,
+                                                                                    hc_rate=0.3)
 
-            # Lấy thông số dung lượng
-            space_bytes = complexity["space_measured_bytes"]
-            space_kb = complexity["space_measured_kb"]
-
-            # Định dạng chuỗi kết quả
-            res = ""
-            res += "Ma trận khoảng cách:\n"
-            for row in matrix:
-                res += f"{row}\n"
-
-            res += f"\nGiải pháp tốt nhất: {list(best_route)}\n"
-            res += f"Quãng đường ngắn nhất: {best_distance}\n"
-            res += f"Thời gian đo được (ms): {time_ms}\n"
-            res += f"Dung lượng đo được (bytes): {space_bytes}\n"
-            res += f"Dung lượng đo được (KB): {space_kb}\n"
-
-            # Cập nhật GUI
-            app.update_result_text(res)
+            # Đẩy thẳng chuỗi format chuẩn lên giao diện
+            app.update_result_text(result_str)
             Visualization.draw_route(app.canvas, app.ax, matrix, best_route, "Lộ trình: Hybrid CSO")
         except Exception as e:
             app.show_error(f"Lỗi chạy Hybrid:\n{str(e)}")

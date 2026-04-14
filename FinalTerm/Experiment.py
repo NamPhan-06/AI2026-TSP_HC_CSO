@@ -16,7 +16,7 @@ def run_comparison_experiment(num_cities, seed):
     start_time = time.perf_counter()
 
     # --- ĐÃ CẬP NHẬT: Hứng thêm biến hybrid_complexity ---
-    hybrid_route, hybrid_distance, conv, hybrid_complexity = hybrid_algorithm_advanced(
+    hybrid_route, hybrid_distance, conv, hybrid_complexity, _ = hybrid_algorithm_advanced(
         hc.matrix, N=30, max_iter=100, hc_rate=0.3
     )
     # -----------------------------------------------------

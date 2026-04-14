@@ -163,13 +163,23 @@ def hybrid_algorithm(matrix, N=20, max_iter=100):
 # ===== HYBRID ADVANCED ===
 # =========================
 
+# =========================
+# ===== HYBRID ADVANCED ===
+# =========================
+
 def hybrid_algorithm_advanced(matrix, N=30, max_iter=100, hc_rate=0.3):
+    # Dời đồng hồ đo thời gian vào hẳn bên trong thuật toán để đo chính xác
+    start_time = time.perf_counter()
     num_cities = len(matrix)
 
     X = initialize_population(N, num_cities)
     V = np.zeros((N, num_cities))
 
+    # --- Lấy giải pháp ngẫu nhiên ban đầu (Gbest của thế hệ 0) ---
     Gbest = get_global_best(X, matrix)
+    initial_route = np.argsort(Gbest)
+    initial_distance = calculate_total_distance(initial_route, matrix)
+    # -----------------------------------------------------------
 
     convergence = []
 
@@ -182,21 +192,17 @@ def hybrid_algorithm_advanced(matrix, N=30, max_iter=100, hc_rate=0.3):
             else:
                 X[i], V[i] = tracing_mode(X[i], Gbest, 2.0, 0.5, V[i])
 
-        # 🔥 Apply Hill Climbing trong quá trình
+        # Apply Hill Climbing
         for i in range(N):
             if np.random.rand() < hc_rate:
                 route = np.argsort(X[i])
                 improved, _ = hill_climbing(route, matrix)
 
-                # --- SỬA LỖI LOGIC: Cập nhật lại mảng số thực X[i] theo route mới ---
-                # Thay vì gán thẳng mảng số nguyên, ta sắp xếp lại mảng số thực X[i] cũ
-                # dựa trên thứ tự của improved route để giữ nguyên tính liên tục của CSO
-                old_x = np.sort(X[i])  # Lấy các giá trị liên tục đã được sắp xếp
+                old_x = np.sort(X[i])
                 new_x = np.zeros_like(X[i])
                 for idx, city in enumerate(improved):
                     new_x[city] = old_x[idx]
                 X[i] = new_x
-                # -------------------------------------------------------------------
 
         Gbest = get_global_best(X, matrix)
         convergence.append(tsp_fitness(Gbest, matrix))
@@ -204,118 +210,54 @@ def hybrid_algorithm_advanced(matrix, N=30, max_iter=100, hc_rate=0.3):
     best_route = np.argsort(Gbest)
     best_distance = calculate_total_distance(best_route, matrix)
 
-    # --- ĐO LƯỜNG DUNG LƯỢNG (Bổ sung mới) ---
-    space_bytes = 0
+    # Chốt thời gian kết thúc thuật toán
+    end_time = time.perf_counter()
+    time_measured_ms = round((end_time - start_time) * 1000.0, 4)
 
-    # 1. Đo kích thước của Quần thể (Vị trí X và Vận tốc V của N con mèo)
+    # --- ĐO LƯỜNG DUNG LƯỢNG ---
+    space_bytes = 0
     space_bytes += sys.getsizeof(X) + X.nbytes
     space_bytes += sys.getsizeof(V) + V.nbytes
-
-    # 2. Đo kích thước của Ma trận khoảng cách
     space_bytes += sys.getsizeof(matrix)
     for row in matrix:
         space_bytes += sys.getsizeof(row)
         for value in row:
             space_bytes += sys.getsizeof(value)
-
-    # 3. Đo kích thước của Route tốt nhất và Gbest
     space_bytes += sys.getsizeof(best_route) + best_route.nbytes
     space_bytes += sys.getsizeof(Gbest) + Gbest.nbytes
-
-    # 4. Đo mảng hội tụ (convergence curve)
     space_bytes += sys.getsizeof(convergence)
     for val in convergence:
         space_bytes += sys.getsizeof(val)
 
-    # Đóng gói thông số phức tạp thành Dictionary
+    # Nạp thêm thời gian vào dict complexity để các hàm khác tiện dùng
     complexity = {
+        "time_measured_ms": time_measured_ms,
         "space_measured_bytes": int(space_bytes),
         "space_measured_kb": round(space_bytes / 1024.0, 6)
     }
-    # -----------------------------------------
 
-    # TRẢ VỀ THÊM DICTIONARY COMPLEXITY
-    return best_route, best_distance, convergence, complexity
+    # =========================================================
+    # --- TẠO CHUỖI RESULT THEO ĐÚNG FORMAT CỦA HILL CLIMBING ---
+    # =========================================================
+    result_str = ""
+    result_str += "=========== KẾT QUẢ HYBRID CSO ===========\n"
+    result_str += "Ma trận khoảng cách:\n"
+    for row in matrix:
+        result_str += str(row) + "\n"
 
-# =========================
-# ===== EVALUATION ========
-# =========================
+    result_str += "\nGiải pháp ngẫu nhiên đầu tiên là: " + str(list(initial_route)) + "\n"
+    result_str += "Độ dài quãng đường ngẫu nhiên đầu tiên là: " + str(initial_distance) + "\n"
 
-def run_hill_climbing_only(num_cities, seed=None):
-    matrix = create_distance_matrix(num_cities, seed=seed)
-    route = generate_random_route(num_cities)
+    result_str += "\nGiải pháp tốt nhất: " + str(list(best_route)) + "\n"
+    result_str += "Quãng đường ngắn nhất: " + str(best_distance) + "\n"
+    result_str += "Số vòng lặp thực hiện: " + str(max_iter) + "\n"
+    result_str += "Thời gian đo được (ms): " + str(complexity["time_measured_ms"]) + "\n"
+    result_str += "Dung lượng đo được (bytes): " + str(complexity["space_measured_bytes"]) + "\n"
+    result_str += "Dung lượng đo được (KB): " + str(complexity["space_measured_kb"]) + "\n"
 
-    start = time.perf_counter()
-    route, dist = hill_climbing(route, matrix)
-    end = time.perf_counter()
+    # Trả về 5 biến (thêm result_str ở cuối)
+    return best_route, best_distance, convergence, complexity, result_str
 
-    return dist, (end - start) * 1000
-
-
-def run_hybrid(num_cities, seed=None):
-    matrix = create_distance_matrix(num_cities, seed=seed)
-
-    start = time.perf_counter()
-    route, dist, conv = hybrid_algorithm_advanced(matrix)
-    end = time.perf_counter()
-
-    # Only return distance and time for evaluation, as evaluate_algorithm expects 2 values.
-    return dist, (end - start) * 1000
-
-
-def evaluate_algorithm(func, runs=10):
-    distances = []
-    times = []
-
-    for _ in range(runs):
-        d, t = func()
-        distances.append(d)
-        times.append(t)
-
-    return {
-        "best": np.min(distances),
-        "mean": np.mean(distances),
-        "std": np.std(distances),
-        "time_mean": np.mean(times)
-    }
-
-
-# =========================
-# ===== VISUALIZATION =====
-# =========================
-
-def plot_convergence(curve, title):
-    plt.figure()
-    plt.plot(curve)
-    plt.title(title)
-    plt.xlabel("Iteration")
-    plt.ylabel("Distance")
-    plt.grid()
-    plt.show()
-
-
-def plot_route(route):
-    coords = np.random.rand(len(route), 2)
-    ordered = coords[route]
-
-    plt.figure()
-    plt.plot(ordered[:, 0], ordered[:, 1], marker='o')
-    plt.title("Best Route Visualization")
-    plt.show()
-
-
-# =========================
-# ===== TEST CASES ========
-# =========================
-
-def run_case(size):
-    print(f"\n===== SIZE {size} =====")
-
-    hc = evaluate_algorithm(lambda: run_hill_climbing_only(size), runs=5)
-    hybrid = evaluate_algorithm(lambda: run_hybrid(size), runs=5)
-
-    print("Hill Climbing:", hc)
-    print("Hybrid CSO+HC:", hybrid)
 
 
 
