@@ -32,22 +32,21 @@ def run_comparison_experiment(num_cities, seed):
     improvement = round(((hc_distance - hybrid_distance) / hc_distance) * 100, 1)
 
     # 4. Format Text kết quả (Bổ sung thêm cột D.Lượng KB)
-    report_text = "KẾT QUẢ SO SÁNH THỰC TẾ\n"
-    report_text += "=" * 56 + "\n"
-    report_text += f"{'Thuật toán':<12} | {'Q.Đường':<8} | {'T.Gian(ms)':<10} | {'D.Lượng(KB)':<12}\n"
-    report_text += "-" * 56 + "\n"
-    report_text += f"{'HC Thuần':<12} | {hc_distance:<8.1f} | {hc.time_measured_ms:<10.2f} | {hc_kb:<12.2f}\n"
-    report_text += f"{'Hybrid CSO':<12} | {hybrid_distance:<8.1f} | {hybrid_time_ms:<10.2f} | {hybrid_kb:<12.2f}\n"
-    report_text += "=" * 56 + "\n\n"
+    report_text = "======== KẾT QUẢ SO SÁNH THỰC TẾ =========\n"
+    report_text += "=" * 42 + "\n"
+    report_text += f"{'Tiêu chí':<12} | {'HC Thuần':<10} | {'Hybrid CSO':<11}\n"
+    report_text += "-" * 42 + "\n"
+    report_text += f"{'Q.Đường':<12} | {hc_distance:<10.1f} | {hybrid_distance:<11.1f}\n"
+    report_text += f"{'T.Gian(ms)':<12} | {hc.time_measured_ms:<10.2f} | {hybrid_time_ms:<11.2f}\n"
+    report_text += f"{'D.Lượng(KB)':<12} | {hc_kb:<10.2f} | {hybrid_kb:<11.2f}\n"
+    report_text += "=" * 42 + "\n\n"
 
     # 5. Đưa ra nhận xét tự động
     report_text += f"KẾT LUẬN:\n"
     if improvement > 0:
         report_text += f"- Hybrid CSO tối ưu lộ trình tốt hơn {improvement}%.\n"
-        report_text += f"- Đánh đổi: Tốn nhiều thời gian và bộ nhớ hơn do \n  duy trì quần thể 30 cá thể.\n"
     elif improvement < 0:
         report_text += f"- Hill Climbing cho kết quả tốt hơn {-improvement}%.\n"
-        report_text += f"- (Ghi chú: Thường xảy ra ở bài toán kích thước nhỏ).\n"
     else:
         report_text += f"- Cả hai thuật toán đều hội tụ về cùng một quãng đường.\n"
 

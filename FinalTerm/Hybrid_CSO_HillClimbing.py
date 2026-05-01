@@ -245,10 +245,10 @@ def hybrid_algorithm_advanced(matrix, N=30, max_iter=100, hc_rate=0.3):
     for row in matrix:
         result_str += str(row) + "\n"
 
-    result_str += "\nGiải pháp ngẫu nhiên đầu tiên là: " + str(list(initial_route)) + "\n"
+    result_str += "\nGiải pháp ngẫu nhiên đầu tiên là: " + str(initial_route.tolist()) + "\n"
     result_str += "Độ dài quãng đường ngẫu nhiên đầu tiên là: " + str(initial_distance) + "\n"
 
-    result_str += "\nGiải pháp tốt nhất: " + str(list(best_route)) + "\n"
+    result_str += "\nGiải pháp tốt nhất: " + str(best_route.tolist()) + "\n"
     result_str += "Quãng đường ngắn nhất: " + str(best_distance) + "\n"
     result_str += "Số vòng lặp thực hiện: " + str(max_iter) + "\n"
     result_str += "Thời gian đo được (ms): " + str(complexity["time_measured_ms"]) + "\n"
