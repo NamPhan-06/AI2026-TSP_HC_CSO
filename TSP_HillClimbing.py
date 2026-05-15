@@ -212,11 +212,13 @@ def print_case_report(case_result):
 # CLASS
 
 class HillClimbing:
-    def __init__(self, num_cities, seed=None):
+    # Thêm tham số max_iterations=100 để đồng bộ với CSO
+    def __init__(self, num_cities, seed=None, max_iterations=100):
         self.matrix = None
         self.result = None
         self.num_cities = num_cities
         self.seed = seed
+        self.max_iterations = max_iterations
         self.best_route = None
         self.best_distance = None
         self.initial_route = None
@@ -224,6 +226,7 @@ class HillClimbing:
         self.time_measured_ms = None
         self.space_measured_bytes = None
         self.space_measured_kb = None
+        self.convergence = []
 
     def create_plot(self):
         if self.matrix is None:
@@ -252,32 +255,41 @@ class HillClimbing:
         self.initial_route = generate_random_route(self.num_cities)
         initial_distance = calculate_total_distance(self.initial_route, self.matrix)
 
-        neighbors = generate_neighbors(self.initial_route)
-        best_neighbor, best_neighbor_distance = get_best_neighbor(self.matrix, neighbors)
-
         current_route = self.initial_route
         current_distance = initial_distance
-        iterations = 0
 
         start_time = time.perf_counter()
 
-        while best_neighbor_distance < current_distance:
-            current_route = best_neighbor
-            current_distance = best_neighbor_distance
+        # Ghi nhận mốc ban đầu
+        self.convergence = [initial_distance]
+        is_stuck = False
 
-            neighbors = generate_neighbors(current_route)
-            best_neighbor, best_neighbor_distance = get_best_neighbor(self.matrix, neighbors)
+        # --- ĐÃ THAY VÒNG LẶP WHILE THÀNH FOR ĐỂ CHẠY ĐÚNG KPI ---
+        for _ in range(self.max_iterations):
+            if not is_stuck:
+                neighbors = generate_neighbors(current_route)
+                best_neighbor, best_neighbor_distance = get_best_neighbor(self.matrix, neighbors)
 
-            iterations += 1
+                if best_neighbor_distance < current_distance:
+                    current_route = best_neighbor
+                    current_distance = best_neighbor_distance
+                else:
+                    # Nếu không tìm thấy lân cận tốt hơn -> Kẹt ở cực tiểu cục bộ
+                    # Bật cờ is_stuck lên để các vòng lặp sau không tốn CPU tính toán lân cận nữa
+                    is_stuck = True
+
+            # Dù tìm được đường đi mới hay đang bị kẹt, vẫn ghi lịch sử để vẽ biểu đồ ngang
+            self.convergence.append(current_distance)
 
         end_time = time.perf_counter()
 
         self.best_route = current_route
         self.best_distance = current_distance
-        self.iterations_used = iterations
+        self.iterations_used = self.max_iterations  # Cập nhật đúng số vòng lặp đã chạy
 
         self.time_measured_ms = round((end_time - start_time) * 1000.0, 6)
 
+        # Đo lường bộ nhớ (giữ nguyên)
         final_neighbors = generate_neighbors(self.best_route)
         space_bytes = sys.getsizeof(self.matrix)
         for row in self.matrix:
@@ -298,21 +310,23 @@ class HillClimbing:
         self.space_measured_bytes = int(space_bytes)
         self.space_measured_kb = round(space_bytes / 1024.0, 6)
 
+        # Format xuất kết quả
+        # TẠO KẾT QUẢ TỔNG QUAN (Đã xóa ma trận)
         self.result = ""
         self.result += "=============== KẾT QUẢ HC ===============\n"
-        self.result += "Ma trận khoảng cách:\n"
-        for row in self.matrix:
-            self.result += str(row) + "\n"
+        self.result += "Giải pháp ngẫu nhiên đầu tiên: " + str(self.initial_route) + "\n"
+        self.result += "Q.đường ngẫu nhiên đầu tiên: " + str(initial_distance) + "\n\n"
+        self.result += "Giải pháp tốt nhất      : " + str(self.best_route) + "\n"
+        self.result += "Quãng đường ngắn nhất   : " + str(self.best_distance) + "\n"
+        self.result += "Số vòng lặp thực hiện   : " + str(self.iterations_used) + "\n"
+        self.result += "Thời gian đo được (ms)  : " + str(self.time_measured_ms) + "\n"
+        self.result += "Dung lượng đo được (KB) : " + str(self.space_measured_kb) + "\n"
 
-        self.result += "\nGiải pháp ngẫu nhiên đầu tiên là: " + str(self.initial_route) + "\n"
-        self.result += "Độ dài quãng đường ngẫu nhiên đầu tiên là: " + str(initial_distance) + "\n"
-
-        self.result += "\nGiải pháp tốt nhất: " + str(self.best_route) + "\n"
-        self.result += "Quãng đường ngắn nhất: " + str(self.best_distance) + "\n"
-        self.result += "Số vòng lặp thực hiện: " + str(self.iterations_used) + "\n"
-        self.result += "Thời gian đo được (ms): " + str(self.time_measured_ms) + "\n"
-        self.result += "Dung lượng đo được (bytes): " + str(self.space_measured_bytes) + "\n"
-        self.result += "Dung lượng đo được (KB): " + str(self.space_measured_kb) + "\n"
+        # TẠO LỊCH SỬ BẢNG HỘI TỤ
+        self.history_result = f"{'Vòng lặp':<10} | {'Quãng đường'}\n"
+        self.history_result += "-" * 28 + "\n"
+        for i, val in enumerate(self.convergence):
+            self.history_result += f"{i:<10} | {val}\n"
 
         return self.best_route, self.best_distance
 
