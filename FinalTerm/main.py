@@ -3,7 +3,7 @@ from GUI import TSPGuiApp
 import Visualization
 import Experiment
 from TSP_HillClimbing import HillClimbing
-from CSO import CSO
+from TSP_CSO import CSO
 
 def main():
     root = tk.Tk()
@@ -48,7 +48,7 @@ def main():
             app.update_result_text(result_data["report_text"], result_data["history_text"])
             combined_convergence = [result_data["hc_convergence"], result_data["cso_convergence"]]
             Visualization.draw_both(app.canvas, app.ax_route, app.ax_conv, result_data["matrix"], result_data["cso_route"], combined_convergence,
-                                    "Lộ trình Tốt nhất (CSO)", "So sánh Tốc độ Hội tụ", ["HC Thuần", "CSO Thuần"])
+                                    "Lộ trình Tốt nhất", "So sánh Tốc độ Hội tụ", ["HC Thuần", "CSO Thuần"])
         except Exception as e:
             app.show_error(f"Lỗi chạy So sánh:\n{str(e)}")
 

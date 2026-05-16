@@ -6,7 +6,7 @@ import Visualization
 class TSPGuiApp:
     def __init__(self, root, cmd_hc, cmd_cso, cmd_compare):
         self.root = root
-        self.root.title("TSP Optimizer - MVC Architecture")
+        self.root.title("The Travelling Salesman_HC_CSO")
         self.root.geometry("1100x700")
 
         style = ttk.Style()
